@@ -7,6 +7,37 @@ from django.test import Client
 
 
 class APITestMixin:
+    def assertApiAllowGet(self, url, params=None, client=None, msg=None):
+        if not client:
+            client = Client()
+
+        res = client.get(url_add_params(url, params), content_type='application/json')
+        self.assertStatusCodeIs(res.status_code, 200, msg=msg)
+        data = res.json()
+        return data
+
+    def assertApiAllowPost(self, url, sample_data, params=None, client=None, msg=None):
+        if not client:
+            client = Client()
+
+        res = client.post(url_add_params(url, params), sample_data, content_type='application/json')
+        self.assertStatusCodeIs(res.status_code, STATUS_PASSED, msg=msg)
+        return res.json()
+
+    def assertApiForbidGet(self, url, params=None, client=None, msg=None):
+        if not client:
+            client = Client()
+
+        res = client.get(url_add_params(url, params), content_type='application/json')
+        self.assertStatusCodeIs(res.status_code, STATUS_REJECTED, msg=msg)
+
+    def assertApiForbidPost(self, url, sample_data, params=None, client=None, msg=None):
+        if not client:
+            client = Client()
+
+        res = client.post(url_add_params(url, params), sample_data, content_type='application/json')
+        self.assertStatusCodeIs(res.status_code, STATUS_REJECTED, msg=msg)
+
     def assertIsListResult(self, data, msg=None):
         try:
             return get_result_list(data)
@@ -33,7 +64,7 @@ class APITestMixin:
 
         final_url = url_add_params(get_detail_url(url, sample_id), params)
         res = client.get(final_url)
-        self.assertStatusCodeIs(res.status_code, 200)
+        self.assertStatusCodeIs(res.status_code, 200, msg=msg)
         data = res.json()
         self.assertIsInstance(data, dict, msg=msg)
         return data
